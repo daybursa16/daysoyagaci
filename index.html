@@ -162,6 +162,13 @@
             margin-top: 20px; 
             overflow: visible;
         }
+
+      /* OrgChart'ın ana düğümünü sınırlamak için */
+      div.google-visualization-orgchart-node {
+          width: 100px !important; 
+          height: auto !important;
+          padding: 0 !important; /* Boşluğu kaldırıyoruz */
+      }
       
       .person-node { 
         display: flex; 
@@ -173,26 +180,31 @@
         border: 1px solid #ddd;
         border-radius: 5px;
         position: relative;
-        /* Kutucuk genişliğini sabitleyelim */
-        width: 100px; /* Veya istediğiniz genişlik */
+        width: 90px; /* Düğümün iç genişliğini küçülttük */
       }
-      /* BURASI GÜNCELLENDİ */
+
+      /* Görselin boyutunu kesin olarak belirliyoruz */
       .profile-pic { 
-        width: 60px; 
-        height: 60px; 
+        width: 50px; /* Daha küçük bir boyut */
+        height: 50px; /* Daha küçük bir boyut */
         border-radius: 50%; 
         object-fit: cover; 
         margin-bottom: 5px;
         display: block;
       }
+      /* Google Charts'ın yarattığı img etiketlerine de doğrudan müdahale edelim */
+      .person-node img {
+          max-width: 50px !important;
+          max-height: 50px !important;
+      }
+
       .name { 
         font-weight: bold; 
-        font-size: 14px; 
-        /* Adın kutucuğa sığması için */
+        font-size: 12px; /* Fontu da küçülttük */
         white-space: nowrap; 
         overflow: hidden; 
         text-overflow: ellipsis; 
-        max-width: 90px; 
+        max-width: 80px; 
       }
       .details-icon { 
         position: absolute; 
@@ -208,6 +220,7 @@
       .close { color: #aaa; float: right; font-size: 28px; font-weight: bold; }
       .close:hover, .close:focus { color: #000; text-decoration: none; cursor: pointer; }
 </style>
+              
   </head>
   <body>
     <h1>Aile Soyağacı Görünümü</h1>
@@ -237,5 +250,6 @@
   </body>
 
 </html>
+
 
 
