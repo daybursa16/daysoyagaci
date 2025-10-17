@@ -133,7 +133,7 @@
       
     </script>
     
-    <style>
+<style>
       /* Kaydırma çubukları için body ve html elementine overflow auto eklenmiştir */
       body { font-family: sans-serif; overflow: auto; }
       html { overflow-x: auto; }
@@ -158,9 +158,9 @@
       /* OrgChart ve Modal Stilleri */
       #chart_div { 
             width: 100%; 
-            height: auto; /* İçeriğe göre büyür */
+            height: auto; 
             margin-top: 20px; 
-            overflow: visible; /* Kaydırmayı body'ye bıraktık */
+            overflow: visible;
         }
       
       .person-node { 
@@ -173,7 +173,10 @@
         border: 1px solid #ddd;
         border-radius: 5px;
         position: relative;
+        /* Kutucuk genişliğini sabitleyelim */
+        width: 100px; /* Veya istediğiniz genişlik */
       }
+      /* BURASI GÜNCELLENDİ */
       .profile-pic { 
         width: 60px; 
         height: 60px; 
@@ -182,7 +185,15 @@
         margin-bottom: 5px;
         display: block;
       }
-      .name { font-weight: bold; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100px; }
+      .name { 
+        font-weight: bold; 
+        font-size: 14px; 
+        /* Adın kutucuğa sığması için */
+        white-space: nowrap; 
+        overflow: hidden; 
+        text-overflow: ellipsis; 
+        max-width: 90px; 
+      }
       .details-icon { 
         position: absolute; 
         top: 0; 
@@ -196,7 +207,7 @@
       .modal-content { background-color: #fff; margin: 15% auto; padding: 20px; border: 1px solid #888; width: 80%; max-width: 400px; border-radius: 10px; }
       .close { color: #aaa; float: right; font-size: 28px; font-weight: bold; }
       .close:hover, .close:focus { color: #000; text-decoration: none; cursor: pointer; }
-    </style>
+</style>
   </head>
   <body>
     <h1>Aile Soyağacı Görünümü</h1>
@@ -226,4 +237,5 @@
   </body>
 
 </html>
+
 
