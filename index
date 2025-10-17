@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aile Soyağacı Görünümü</title>
+    
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script>
+      // LÜTFEN BU URL'Yİ KENDİ GOOGLE APPS SCRIPT API (EXEC) URL'NİZ İLE DEĞİŞTİRİN
+      var GAS_API_URL = "https://script.google.com/macros/s/AKfycbwZHhOKbi-0Pmx4D98vG8xdUYB5dWAb4mQvQ2DMtVIbxEIq1b6sJNyBLl3zyQGvpsY6/exec"; 
+      
+      // LÜTFEN AŞAĞIDAKİ FORM_LINKI DEĞİŞKENİNİ KENDİ GOOGLE FORM URL'NİZ İLE DEĞİŞTİRİN
+      var FORM_LINKI = "https://docs.google.com/forms/d/1nyG8pPEeuIZyYE_gPN05CfqqEDc4izi78-m7GdCaPJM/viewform"; // Form URL'nizin "viewform" olduğundan emin olun
+      
+      var familyData; 
+      
+      google.charts.load('current', {packages:["orgchart"]});
+      google.charts.setOnLoadCallback(fetchFamilyData);
+
+      // ==========================================================
+      // APPS SCRIPT API'SİNDEN VERİ ÇEKME FONKSİYONU (GitHub için kritik)
+      // ==========================================================
+      function fetchFamilyData() {
+          document.getElementById('chart_div').innerHTML = 'Veriler Google Apps Script API\'sinden yükleniyor...';
+          
+          fetch(GAS_API_URL)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Ağ yanıtı uygun değil: ' + response.statusText + ' (' + response.status + ')');
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Veri başarıyla çekildi
+                drawChart(data); 
+            })
+            .catch(error => {
+                console.error("Veri çekme hatası:", error);
+                document.getElementById('chart_div').innerHTML = 
+                    'Hata: Veri kaynağına (Apps Script API) ulaşılamadı. ' +
+                    'Lütfen API URL\'sinin doğru olduğundan ve "Herkes" için yayınlandığından emin olun.';
+            });
+      }
+
+      // ==========================================================
+      // Şemayı Çizme Fonksiyonu
+      // ==========================================================
+      function drawChart(dataArray) {
+        familyData = dataArray; // Global değişkene veriyi kaydet
+        var dataTable = new google.visualization.DataTable();
+
+        dataTable.addColumn('string', 'Name');
+        dataTable.addColumn('string', 'Parent');
+        dataTable.addColumn('string', 'ToolTip');
+
+        for (var i = 0; i < familyData.length; i++) {
+          var person = familyData[i];
+          var personId = person.id; 
+          var parentId = person.parent;
+          
+          // GÖRSEL GÖSTERİMİ
+          var imageUrl = person.base64Image; 
+          var nameDisplay = person.id.split(' - ')[0] || person.id;
+
+          var nodeHTML = 
+            '<div class="person-node">' +
+              '<img src="' + imageUrl + '" class="profile-pic" onerror="this.src=\'https://via.placeholder.com/60?text=NO_PIC\'">' +
+              '<div class="name">' + nameDisplay + '</div>' + 
+              '<div class="details-icon" data-id="' + personId + '" onclick="showDetails(event, \'' + personId + '\')">ⓘ</div>' +
+            '</div>';
+
+          // Tarih objesi Apps Script'ten geldiği için Date nesnesine dönüştürmemiz gerekebilir
+          var dateObj = new Date(person.birthDate);
+          var birthDateDisplay = !isNaN(dateObj.getTime()) ? dateObj.toLocaleDateString('tr-TR') : 'Bilinmiyor';
+          
+          var tooltip = 
+            'Doğum: ' + birthDateDisplay + '\n' +
+            'Telefon: ' + (person.phone || 'Yok') + '\n' +
+            'Açıklama: ' + (person.description || 'Yok');
+          
+          var finalParentId = (parentId && parentId.indexOf('KÖK') !== -1) ? '' : parentId;
+
+          dataTable.addRow([
+            {v: personId, f: nodeHTML}, 
+            finalParentId, 
+            tooltip
+          ]);
+        }
+        
+        var chart = new google.visualization.OrgChart(document.getElementById('chart_div'));
+        chart.draw(dataTable, {
+          'allowHtml': true, 
+          'allowCollapse': true 
+        });
+      }
+
+      // ==========================================================
+      // Detay Modalını Gösterme Fonksiyonu
+      // ==========================================================
+      function showDetails(event, id) {
+          event.stopPropagation();
+          
+          var person = familyData.find(p => p.id === id);
+          
+          if (!person) return;
+
+          var dateObj = new Date(person.birthDate);
+          var birthDateDisplay = !isNaN(dateObj.getTime()) ? dateObj.toLocaleDateString('tr-TR') : 'Bilinmiyor';
+          var namePart = person.id.split(' - ')[0] || person.id;
+          
+          // Base64 verisi kullanılır
+          var imageUrlModal = person.base64Image; 
+
+          var detailsHtml = 
+            // Gömülü resim (Base64 verisi kullanır)
+            '<img src="' + imageUrlModal + '" style="width:100%; max-height: 200px; object-fit: contain; margin-bottom: 15px; border-radius: 5px;" onerror="this.style.display=\'none\'">' +
+            "<h2>" + namePart + "</h2>" +
+            "<p><strong>Benzersiz ID:</strong> " + person.id + "</p>" +
+            "<p><strong>Doğum Tarihi:</strong> " + birthDateDisplay + "</p>" +
+            "<p><strong>Telefon:</strong> " + (person.phone || 'Yok') + "</p>" +
+            "<p><strong>Açıklama:</strong> " + (person.description || 'Yok') + "</p>" +
+            // Orijinal Drive linki (yedek olarak)
+            "<p><a href=\"" + person.imageUrl + "\" target=\"_blank\">Görselin Orijinal Linki</a></p>"; 
+            
+          document.getElementById('modal-content').innerHTML = detailsHtml;
+          document.getElementById('details-modal').style.display = 'block';
+      }
+
+      function closeModal() {
+        document.getElementById('details-modal').style.display = 'none';
+      }
+      
+    </script>
+    
+    <style>
+      /* Kaydırma çubukları için body ve html elementine overflow auto eklenmiştir */
+      body { font-family: sans-serif; overflow: auto; }
+      html { overflow-x: auto; }
+      
+      .explanation {
+          background-color: #e6f0ff;
+          border: 1px solid #cce0ff;
+          padding: 15px;
+          border-radius: 8px;
+          margin-bottom: 20px;
+          font-size: 0.95em;
+      }
+      .explanation strong { color: #004d99; }
+      .new-entry-link { 
+          display: block; 
+          margin-top: 10px; 
+          font-weight: bold; 
+          color: #28a745; 
+          text-decoration: none;
+      }
+      
+      /* OrgChart ve Modal Stilleri */
+      #chart_div { 
+            width: 100%; 
+            height: auto; /* İçeriğe göre büyür */
+            margin-top: 20px; 
+            overflow: visible; /* Kaydırmayı body'ye bıraktık */
+        }
+      
+      .person-node { 
+        display: flex; 
+        flex-direction: column; 
+        align-items: center; 
+        text-align: center; 
+        padding: 5px; 
+        background-color: #f7f7f7; 
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        position: relative;
+      }
+      .profile-pic { 
+        width: 60px; 
+        height: 60px; 
+        border-radius: 50%; 
+        object-fit: cover; 
+        margin-bottom: 5px;
+        display: block;
+      }
+      .name { font-weight: bold; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100px; }
+      .details-icon { 
+        position: absolute; 
+        top: 0; 
+        right: 5px; 
+        cursor: pointer; 
+        color: #007bff; 
+        font-weight: bold;
+        font-size: 1.2em;
+      }
+      .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4); }
+      .modal-content { background-color: #fff; margin: 15% auto; padding: 20px; border: 1px solid #888; width: 80%; max-width: 400px; border-radius: 10px; }
+      .close { color: #aaa; float: right; font-size: 28px; font-weight: bold; }
+      .close:hover, .close:focus { color: #000; text-decoration: none; cursor: pointer; }
+    </style>
+  </head>
+  <body>
+    <h1>Aile Soyağacı Görünümü</h1>
+    
+    <div class="explanation">
+        <p>
+            Bu soyağacı, Google Apps Script API'si üzerinden dinamik olarak oluşturulmuştur.
+            Kişilerin detaylı bilgilerine ve görsele ulaşmak için, kutunun sağ üst köşesindeki **<span style="color: #007bff; font-weight: bold;">ⓘ</span> (Bilgi)** simgesine tıklayın.
+        </p>
+        <p>
+            <strong>Ağaca yeni bir kişi eklemek veya mevcut bir kişinin bilgilerini güncellemek</strong> için aşağıdaki bağlantıyı kullanın.
+        </p>
+        <a href="javascript:void(0);" onclick="window.open(FORM_LINKI, '_blank');" class="new-entry-link">
+            + Yeni Kişi/Güncelleme Formu Girişi
+        </a>
+    </div>
+
+    <div id="chart_div">Yükleniyor...</div> 
+    
+    <div id="details-modal" class="modal" onclick="closeModal()">
+      <div class="modal-content" onclick="event.stopPropagation()">
+        <span class="close" onclick="closeModal()">&times;</span>
+        <div id="modal-content"></div>
+      </div>
+    </div>
+    
+  </body>
+</html>
