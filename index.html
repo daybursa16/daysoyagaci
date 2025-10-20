@@ -2,8 +2,9 @@
 <html lang="tr">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Day Sülalesi Soyağacı</title>
+  <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
   <style>
     html, body {
       margin: 0;
@@ -14,287 +15,181 @@
     }
 
     header {
-      background: #003366;
-      color: white;
-      padding: 10px;
-      text-align: center;
-      font-size: 20px;
       position: fixed;
       top: 0;
       left: 0;
       width: 100%;
+      background: white;
       z-index: 1000;
+      padding: 10px 0;
+      text-align: center;
+      border-bottom: 1px solid #ccc;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 22px;
     }
 
     .explanation {
-      background: #f0f0f0;
-      padding: 12px;
-      text-align: center;
+      padding: 8px 12px;
       font-size: 14px;
       line-height: 1.4;
-      position: fixed;
-      top: 60px;
-      left: 0;
-      width: 100%;
-      z-index: 999;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      max-width: 900px;
+      margin: 0 auto;
+      text-align: center;
     }
 
-    .new-entry-link {
-      color: #003366;
-      font-weight: bold;
-      text-decoration: underline;
-    }
-
-    #chart_div {
+    .container {
       position: absolute;
-      top: 140px; /* header + explanation yüksekliği kadar */
+      top: 150px; /* Header yüksekliğine göre */
       left: 0;
       right: 0;
       bottom: 0;
-      overflow: hidden;
-      touch-action: none;
-      background: #fff;
-    }
-
-    #tree-content {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%) scale(1);
-      transform-origin: center center;
-      transition: transform 0.1s ease-out;
-      white-space: nowrap;
-    }
-
-    .node {
-      display: inline-block;
-      background: #f0f0f0;
-      border: 1px solid #999;
-      padding: 5px 10px;
-      margin: 10px;
-      border-radius: 5px;
+      overflow: auto;
       text-align: center;
-      max-width: 120px;
-      word-wrap: break-word;
-      white-space: normal;
-      position: relative;
     }
 
-    .toggle-btn {
-      position: absolute;
-      top: -12px;
-      right: -12px;
-      width: 22px;
-      height: 22px;
-      border-radius: 50%;
-      background: #003366;
-      color: white;
-      font-weight: bold;
-      cursor: pointer;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      z-index: 10;
+    #chart_div {
+      display: inline-block;
+      min-width: 100%;
+      min-height: 100%;
+      cursor: grab;
     }
 
-    #zoom-controls {
+    .chart-zoom-wrapper {
+      display: inline-block;
+      transform-origin: center center;
+      transition: transform 0.3s ease;
+    }
+
+    /* Zoom butonları */
+    .zoom-controls {
       position: fixed;
       bottom: 20px;
       left: 20px;
+      z-index: 1001;
       display: flex;
       flex-direction: column;
       gap: 10px;
-      z-index: 1000;
     }
 
-    #zoom-controls button {
+    .zoom-controls button {
       width: 40px;
       height: 40px;
-      border: none;
-      border-radius: 50%;
-      font-size: 20px;
+      font-size: 22px;
       cursor: pointer;
-      background: #003366;
-      color: white;
+      background: white;
+      border: 1px solid #ccc;
+      border-radius: 50%;
     }
 
-    @media (max-width: 768px) {
-      header {
-        font-size: 16px;
-      }
-      .explanation {
-        font-size: 13px;
-      }
-      .node {
-        max-width: 100px;
-        font-size: 13px;
-      }
+    /* Düğmeler üzerine gelince */
+    .zoom-controls button:hover {
+      background: #eee;
     }
   </style>
 </head>
 <body>
   <header>
     <h1>👨‍👩‍👧‍👦 Day Sülalesi Soyağacı</h1>
+    <div class="explanation">
+      Bu soyağacı <strong>Berat Day</strong> tarafından dinamik olarak oluşturulmuştur. Yapılan herhangi bir girişte düzenleme aynı isim ve tarih seçerek oluşturulabilmektedir. 
+      Farklı isimle yanlışlıkla oluşturulan yeni olmayan bir aile bireyi için iletişime geçiniz. 
+      İletişim için <strong>05434813373</strong>.<br><br>
+      Buradan kişiler ekleyebilir ve güncelleyebilirsiniz:
+      <a href="javascript:void(0);" onclick="window.open(FORM_LINKI, '_blank');" class="new-entry-link">
+        + Yeni Kişi / Güncelleme Formu
+      </a>
+    </div>
   </header>
 
-  <div class="explanation">
-    Bu soyağacı <strong>Berat Day</strong> tarafından dinamik olarak oluşturulmuştur. 
-    Yapılan herhangi bir girişte düzenleme aynı isim ve tarih seçerek oluşturulabilmektedir. 
-    Farklı isimle yanlışlıkla oluşturulan yeni olmayan bir aile bireyi için iletişime geçiniz. 
-    İletişim için <strong>05434813373</strong>.
-    <br><br>
-    Buradan kişiler ekleyebilir ve güncelleyebilirsiniz:
-    <a href="javascript:void(0);" onclick="window.open(FORM_LINKI, '_blank');" class="new-entry-link">
-      + Yeni Kişi / Güncelleme Formu
-    </a>
+  <div class="container" id="container">
+    <div id="chart_div">
+      <div class="chart-zoom-wrapper" id="chart_wrapper"></div>
+    </div>
   </div>
 
-  <div id="chart_div">
-    <div id="tree-content"></div>
-  </div>
-
-  <div id="zoom-controls">
+  <div class="zoom-controls">
     <button id="zoom-in">+</button>
     <button id="zoom-out">−</button>
   </div>
 
   <script>
-    // 📌 Test verisi - senin verinle değiştirilebilir
-    const treeData = {
-      name: "Kök Ebeveyn",
-      children: [
-        { name: "Çocuk 1 Uzun İsimli Birey", children: [{ name: "Torun 1" }, { name: "Torun 2" }] },
-        { name: "Çocuk 2" },
-        { name: "Çocuk 3", children: [{ name: "Torun 3" }] }
-      ]
-    };
+    const FORM_LINKI = "https://docs.google.com/forms/..."; // kendi form linkini koy
 
-    const container = document.getElementById("chart_div");
-    const content = document.getElementById("tree-content");
+    google.charts.load('current', { packages: ['orgchart'] });
+    google.charts.setOnLoadCallback(drawChart);
 
-    function createNode(data) {
-      const node = document.createElement("div");
-      node.className = "node";
-      node.textContent = data.name;
+    let zoomLevel = 1;
 
-      if (data.children && data.children.length > 0) {
-        const toggleBtn = document.createElement("div");
-        toggleBtn.className = "toggle-btn";
-        toggleBtn.textContent = "-";
-        node.appendChild(toggleBtn);
+    function drawChart() {
+      const data = new google.visualization.DataTable();
+      data.addColumn('string', 'Name');
+      data.addColumn('string', 'Manager');
+      data.addColumn('string', 'ToolTip');
 
-        const childrenContainer = document.createElement("div");
-        childrenContainer.style.marginTop = "10px";
+      // 🧬 Test datası (burayı kendi verinle değiştir)
+      data.addRows([
+        [{ v: '1', f: 'Kök Kişi' }, '', ''],
+        [{ v: '2', f: 'Çocuk 1' }, '1', ''],
+        [{ v: '3', f: 'Çocuk 2' }, '1', ''],
+        [{ v: '4', f: 'Torun 1' }, '2', ''],
+        [{ v: '5', f: 'Torun 2' }, '2', ''],
+        [{ v: '6', f: 'Torun 3' }, '3', '']
+      ]);
 
-        data.children.forEach(child => {
-          const childNode = createNode(child);
-          childrenContainer.appendChild(childNode);
-        });
+      const chart = new google.visualization.OrgChart(document.getElementById('chart_wrapper'));
+      chart.draw(data, { allowHtml: true });
 
-        node.appendChild(childrenContainer);
-
-        toggleBtn.addEventListener("click", (e) => {
-          e.stopPropagation();
-          const visible = childrenContainer.style.display !== "none";
-          childrenContainer.style.display = visible ? "none" : "block";
-          toggleBtn.textContent = visible ? "+" : "-";
-        });
-      }
-
-      return node;
+      centerChart(); // sayfa yüklendiğinde ortala
     }
 
-    content.appendChild(createNode(treeData));
-
-    let scale = 1;
-    let originX = window.innerWidth / 2;
-    let originY = window.innerHeight / 2;
-
-    function updateTransform() {
-      content.style.transform = `translate(${originX}px, ${originY}px) scale(${scale})`;
+    // 📐 Ortalamak için
+    function centerChart() {
+      const container = document.getElementById('container');
+      const wrapper = document.getElementById('chart_wrapper');
+      container.scrollLeft = (wrapper.offsetWidth - container.clientWidth) / 2;
+      container.scrollTop = (wrapper.offsetHeight - container.clientHeight) / 2;
     }
 
-    document.getElementById("zoom-in").addEventListener("click", () => {
-      scale *= 1.2;
-      updateTransform();
+    // 🕹️ Zoom butonları
+    document.getElementById('zoom-in').addEventListener('click', () => {
+      zoomLevel += 0.1;
+      applyZoom();
+    });
+    document.getElementById('zoom-out').addEventListener('click', () => {
+      zoomLevel = Math.max(0.3, zoomLevel - 0.1);
+      applyZoom();
     });
 
-    document.getElementById("zoom-out").addEventListener("click", () => {
-      scale /= 1.2;
-      updateTransform();
-    });
+    function applyZoom() {
+      document.getElementById('chart_wrapper').style.transform = `scale(${zoomLevel})`;
+      centerChart();
+    }
 
-    // Mouse sürükleme
-    let isDragging = false;
-    let startX, startY;
+    // 📱 Mobil pinch zoom desteği
+    let lastDistance = null;
+    const containerEl = document.getElementById('container');
 
-    container.addEventListener("mousedown", (e) => {
-      isDragging = true;
-      startX = e.clientX - originX;
-      startY = e.clientY - originY;
-    });
-
-    container.addEventListener("mousemove", (e) => {
-      if (!isDragging) return;
-      originX = e.clientX - startX;
-      originY = e.clientY - startY;
-      updateTransform();
-    });
-
-    container.addEventListener("mouseup", () => (isDragging = false));
-    container.addEventListener("mouseleave", () => (isDragging = false));
-
-    // Dokunmatik sürükleme
-    let touchStartX = 0, touchStartY = 0;
-    container.addEventListener("touchstart", (e) => {
-      if (e.touches.length === 1) {
-        touchStartX = e.touches[0].clientX - originX;
-        touchStartY = e.touches[0].clientY - originY;
-      }
-    });
-
-    container.addEventListener("touchmove", (e) => {
-      if (e.touches.length === 1) {
-        originX = e.touches[0].clientX - touchStartX;
-        originY = e.touches[0].clientY - touchStartY;
-        updateTransform();
-      }
-    });
-
-    // Pinch Zoom (iki parmak)
-    let pinchStart = 0;
-    container.addEventListener("touchstart", (e) => {
+    containerEl.addEventListener('touchmove', function (e) {
       if (e.touches.length === 2) {
-        pinchStart = Math.hypot(
-          e.touches[0].clientX - e.touches[1].clientX,
-          e.touches[0].clientY - e.touches[1].clientY
-        );
+        e.preventDefault();
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        if (lastDistance) {
+          const delta = distance - lastDistance;
+          zoomLevel += delta * 0.001;
+          zoomLevel = Math.min(Math.max(zoomLevel, 0.3), 3);
+          applyZoom();
+        }
+        lastDistance = distance;
       }
-    });
+    }, { passive: false });
 
-    container.addEventListener("touchmove", (e) => {
-      if (e.touches.length === 2) {
-        const pinchEnd = Math.hypot(
-          e.touches[0].clientX - e.touches[1].clientX,
-          e.touches[0].clientY - e.touches[1].clientY
-        );
-        const zoomFactor = pinchEnd / pinchStart;
-        scale *= zoomFactor;
-        pinchStart = pinchEnd;
-        updateTransform();
-      }
-    });
-
-    function centerTree() {
-      originX = window.innerWidth / 2;
-      originY = (window.innerHeight - 140) / 2; // açıklama + header kadar yukarıdan boşluk
-      scale = 1;
-      updateTransform();
-    }
-
-    centerTree();
-    window.addEventListener("resize", centerTree);
+    containerEl.addEventListener('touchend', () => { lastDistance = null; });
   </script>
 </body>
 </html>
