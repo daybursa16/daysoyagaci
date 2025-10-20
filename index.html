@@ -12,6 +12,7 @@
   --primary: #3b82f6;
   --border: #e2e8f0;
   --text-dark: #1e293b;
+  --text-light: #64748b;
 }
 
 html, body {
@@ -26,38 +27,53 @@ html, body {
 
 header {
   background: var(--card-bg);
-  padding: 15px;
+  padding: 20px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
   text-align: center;
-  font-size: 1.6rem;
-  color: var(--primary);
+  width: 100%;
   position: fixed;
   top: 0;
-  width: 100%;
-  z-index: 20;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+  z-index: 10;
 }
 
-.explanation {
-  background: var(--card-bg);
-  padding: 10px;
-  font-size: 0.9rem;
-  text-align: center;
-  line-height: 1.4em;
-  position: fixed;
-  top: 65px;
-  width: 100%;
-  z-index: 15;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+h1 {
+  margin: 0;
+  font-size: 2rem;
+  color: var(--primary);
 }
 
 .container {
   position: absolute;
-  top: 145px;
+  top: 100px;
   left: 0;
   right: 0;
   bottom: 0;
   overflow: hidden;
+  padding: 0 10px;
+  box-sizing: border-box;
 }
+
+.explanation {
+  background-color: #eef6ff;
+  border: 1px solid #d0e3ff;
+  padding: 15px;
+  border-radius: 8px;
+  font-size: 1em;
+  margin-bottom: 10px;
+  line-height: 1.6;
+}
+
+.explanation strong { color: var(--primary); }
+
+.new-entry-link {
+  display: inline-block;
+  margin-top: 10px;
+  font-weight: 600;
+  color: #16a34a;
+  text-decoration: none;
+}
+
+.new-entry-link:hover { text-decoration: underline; }
 
 #chart_div {
   width: 100%;
@@ -74,35 +90,11 @@ header {
   transition: transform 0.05s linear;
 }
 
-.zoom-controls {
-  position: absolute;
-  top: 15px;
-  right: 15px;
-  background: var(--card-bg);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-  display: flex;
-  flex-direction: column;
-  z-index: 30;
-}
-.zoom-controls button {
-  background: var(--card-bg);
-  border: none;
-  font-size: 20px;
-  padding: 8px;
-  cursor: pointer;
-  color: var(--primary);
-}
-.zoom-controls button:hover {
-  background: #f1f5f9;
-}
-
 .person-node {
   background: #f9fafb;
   border: 1px solid var(--border);
   border-radius: 10px;
-  padding: 5px 3px 8px;
+  padding: 5px 3px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -133,11 +125,10 @@ header {
   max-width: 90px;
   word-wrap: break-word;
   line-height: 1.2em;
-  white-space: normal;
 }
 
 .toggle-icon {
-  margin-top: 4px;
+  margin-top: 6px;
   background: var(--primary);
   color: white;
   width: 18px;
@@ -160,15 +151,19 @@ header {
   font-size: 1em;
 }
 
+/* Modal */
 .modal {
   display: none;
   position: fixed;
   z-index: 1000;
-  left: 0; top: 0;
-  width: 100%; height: 100%;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
   background-color: rgba(0,0,0,0.4);
   backdrop-filter: blur(3px);
 }
+
 .modal-content {
   background-color: #fff;
   margin: 5% auto;
@@ -176,21 +171,49 @@ header {
   border-radius: 10px;
   width: 90%;
   max-width: 420px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.2);
 }
+
 .close {
   float: right;
   font-size: 26px;
   color: #aaa;
   cursor: pointer;
 }
-.close:hover {
+.close:hover { color: var(--primary); }
+
+.modal-content img {
+  width: 100%;
+  max-height: 180px;
+  object-fit: contain;
+  border-radius: 8px;
+  margin-bottom: 10px;
+}
+
+.modal-content h2 {
+  margin-top: 0;
   color: var(--primary);
+  font-size: 1.3rem;
+  text-align: center;
+}
+
+.modal-content p {
+  margin: 8px 0;
+  font-size: 0.95rem;
+}
+
+@media (max-width: 768px) {
+  h1 { font-size: 1.5rem; }
+  .explanation { font-size: 0.9em; }
+  .person-node { width: 70px; }
+  .name { max-width: 70px; font-size: 10px; }
+  .profile-pic { width: 35px; height: 35px; }
 }
 </style>
 
 <script>
 const GAS_API_URL = "https://script.google.com/macros/s/AKfycby8UHbXQCHBU6gWCE_Fqiuem6WT6W_JVAa5_ij4vdB0thwaePT_VzL46dAXrJ6ciOPb/exec";
-
+const FORM_LINKI = "https://docs.google.com/forms/d/1nyG8pPEeuIZyYE_gPN05CfqqEDc4izi78-m7GdCaPJM/viewform";
 let familyData = [];
 let collapsedNodes = new Set();
 let scale = 1;
@@ -222,6 +245,7 @@ function drawChart(dataArray) {
     const nameDisplay = person.id.split(' - ')[0] || person.id;
     const hasChild = familyData.some(p => p.parent === person.id);
     const toggleBtn = hasChild ? `<div class="toggle-icon" onclick="toggleNode(event, '${person.id}')">${collapsedNodes.has(person.id) ? '+' : '−'}</div>` : '';
+    const tooltip = `${person.description || ''}`;
 
     const nodeHTML = `
       <div class="person-node" data-id="${person.id}">
@@ -231,7 +255,7 @@ function drawChart(dataArray) {
         <div class="details-icon" onclick="showDetails(event, '${person.id}')">ⓘ</div>
       </div>`;
 
-    dataTable.addRow([{v: person.id, f: nodeHTML}, person.parent || '', nameDisplay]);
+    dataTable.addRow([{v: person.id, f: nodeHTML}, person.parent || '', tooltip]);
   }
 
   const chartWrapper = document.createElement('div');
@@ -243,7 +267,6 @@ function drawChart(dataArray) {
   const chart = new google.visualization.OrgChart(chartWrapper);
   chart.draw(dataTable, {allowHtml: true});
   collapsedNodes.forEach(id => hideChildren(id));
-
   centerChart();
   enablePanAndPinch(chartContainer, chartWrapper);
 }
@@ -308,16 +331,6 @@ function getPinchDistance(e) {
   return Math.sqrt(dx*dx + dy*dy);
 }
 
-function zoomIn() {
-  scale += 0.1;
-  document.querySelector('.chart-zoom-wrapper').style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
-}
-
-function zoomOut() {
-  scale = Math.max(0.3, scale - 0.1);
-  document.querySelector('.chart-zoom-wrapper').style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
-}
-
 function toggleNode(event, id) {
   event.stopPropagation();
   const icon = event.target;
@@ -358,10 +371,17 @@ function showDetails(event, id) {
   event.stopPropagation();
   const person = familyData.find(p => p.id === id);
   if (!person) return;
-  document.getElementById('modal-content').innerHTML = `
+  const dateObj = new Date(person.birthDate);
+  const birthDateDisplay = !isNaN(dateObj.getTime()) ? dateObj.toLocaleDateString('tr-TR') : 'Bilinmiyor';
+  const imageUrl = person.base64Image || person.imageUrl || 'https://via.placeholder.com/200?text=No+Image';
+  const html = `
+    <img src="${imageUrl}" onerror="this.style.display='none'">
     <h2>${person.id.split(' - ')[0]}</h2>
-    <p>${person.description || ''}</p>
-  `;
+    <p><strong>Doğum Tarihi:</strong> ${birthDateDisplay}</p>
+    <p><strong>Telefon:</strong> ${person.phone || 'Yok'}</p>
+    <p><strong>Açıklama:</strong> ${person.description || 'Yok'}</p>
+    ${person.imageUrl ? `<p><a href="${person.imageUrl}" target="_blank">Orijinal Fotoğrafı Gör</a></p>` : ''}`;
+  document.getElementById('modal-content').innerHTML = html;
   document.getElementById('details-modal').style.display = 'block';
 }
 
@@ -371,20 +391,20 @@ function closeModal() {
 </script>
 </head>
 <body>
-<header>👨‍👩‍👧‍👦 Day Sülalesi Soyağacı</header>
-
-<div class="explanation">
-  Bu soyağacı <strong>Berat Day</strong> tarafından oluşturulmuştur.İletişim için <strong>05434813373</strong> <br>
-  Yeni kişi eklemek veya bilgileri güncellemek için:<br>
-  <a href="javascript:void(0);" onclick="window.open('https://docs.google.com/forms', '_blank');" class="new-entry-link">
-    ➕ Yeni Kişi / Güncelleme Formu
-  </a>
-</div>
+<header>
+  <h1>👨‍👩‍👧‍👦 Day Sülalesi Soyağacı</h1>
+</header>
 
 <div class="container">
-  <div class="zoom-controls">
-    <button onclick="zoomIn()">➕</button>
-    <button onclick="zoomOut()">➖</button>
+  <div class="explanation">
+    Bu soyağacı <strong>Berat Day</strong> tarafından dinamik olarak oluşturulmuştur. Yapılan herhangi bir girişte düzenleme aynı isim ve tarih seçerek oluşturulabilmektedir. 
+    Farklı isimle yanlışlıkla oluşturulan yeni olmayan bir aile bireyi için iletişime geçiniz. 
+    İletişim için <strong>05434813373</strong>.
+    <br><br>
+    Buradan kişiler ekleyebilir ve güncelleyebilirsiniz:
+    <a href="javascript:void(0);" onclick="window.open(FORM_LINKI, '_blank');" class="new-entry-link">
+      + Yeni Kişi / Güncelleme Formu
+    </a><br>
   </div>
   <div id="chart_div">Yükleniyor...</div>
 </div>
@@ -397,5 +417,3 @@ function closeModal() {
 </div>
 </body>
 </html>
-
-
