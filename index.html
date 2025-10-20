@@ -12,7 +12,6 @@
   --primary: #3b82f6;
   --border: #e2e8f0;
   --text-dark: #1e293b;
-  --text-light: #64748b;
 }
 
 html, body {
@@ -27,54 +26,52 @@ html, body {
 
 header {
   background: var(--card-bg);
-  padding: 20px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+  padding: 15px;
   text-align: center;
-  width: 100%;
-}
-
-h1 {
-  margin: 0;
-  font-size: 2rem;
+  font-size: 1.6rem;
   color: var(--primary);
+  position: fixed;
+  top: 0;
+  width: 100%;
+  z-index: 10;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
 }
 
 .container {
-  max-width: 100%;
-  width: 100%;
-  height: calc(100vh - 120px);
-  position: relative;
+  position: absolute;
+  top: 60px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
 }
 
 #chart_div {
   width: 100%;
   height: 100%;
-  overflow: hidden;
-  touch-action: none;
   position: relative;
+  touch-action: none;
 }
 
 .chart-zoom-wrapper {
-  display: inline-block;
-  transform-origin: top center;
-  transition: transform 0.2s ease;
   position: absolute;
+  transform-origin: center center;
   left: 50%;
   top: 50%;
-  transform: translate(-50%, -50%) scale(1);
+  transition: transform 0.05s linear;
 }
 
 .zoom-controls {
   position: absolute;
-  top: 10px;
-  right: 10px;
+  top: 15px;
+  right: 15px;
   background: var(--card-bg);
   border: 1px solid var(--border);
   border-radius: 6px;
   box-shadow: 0 2px 5px rgba(0,0,0,0.1);
   display: flex;
   flex-direction: column;
-  z-index: 50;
+  z-index: 20;
 }
 .zoom-controls button {
   background: var(--card-bg);
@@ -86,11 +83,6 @@ h1 {
 }
 .zoom-controls button:hover {
   background: #f1f5f9;
-}
-
-div.google-visualization-orgchart-node {
-  width: 100px !important;
-  padding: 0 !important;
 }
 
 .person-node {
@@ -105,8 +97,6 @@ div.google-visualization-orgchart-node {
   width: 100px;
   transition: all 0.2s ease;
   position: relative;
-  word-wrap: break-word;
-  overflow-wrap: break-word;
 }
 
 .person-node:hover {
@@ -128,9 +118,7 @@ div.google-visualization-orgchart-node {
   font-weight: 600;
   color: var(--text-dark);
   max-width: 90px;
-  white-space: normal;
   word-wrap: break-word;
-  overflow-wrap: break-word;
   line-height: 1.2em;
 }
 
@@ -148,10 +136,6 @@ div.google-visualization-orgchart-node {
   display: inline-block;
 }
 
-.toggle-icon:hover {
-  background: #2563eb;
-}
-
 .details-icon {
   position: absolute;
   top: 2px;
@@ -162,7 +146,6 @@ div.google-visualization-orgchart-node {
   font-size: 1em;
 }
 
-/* Modal */
 .modal {
   display: none;
   position: fixed;
@@ -179,12 +162,6 @@ div.google-visualization-orgchart-node {
   border-radius: 10px;
   width: 90%;
   max-width: 420px;
-  box-shadow: 0 8px 30px rgba(0,0,0,0.2);
-  animation: fadeIn 0.3s ease;
-}
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-20px); }
-  to { opacity: 1; transform: translateY(0); }
 }
 .close {
   float: right;
@@ -195,43 +172,10 @@ div.google-visualization-orgchart-node {
 .close:hover {
   color: var(--primary);
 }
-.modal-content img {
-  width: 100%;
-  max-height: 180px;
-  object-fit: contain;
-  border-radius: 8px;
-  margin-bottom: 10px;
-}
-.modal-content h2 {
-  margin-top: 0;
-  color: var(--primary);
-  font-size: 1.3rem;
-  text-align: center;
-}
-.modal-content p {
-  margin: 8px 0;
-  font-size: 0.95rem;
-}
-.modal-content a {
-  color: var(--primary);
-  text-decoration: none;
-  font-size: 0.9rem;
-}
-.modal-content a:hover {
-  text-decoration: underline;
-}
-
-@media (max-width: 768px) {
-  h1 { font-size: 1.5rem; }
-  .person-node { width: 85px; }
-  .name { max-width: 85px; font-size: 10px; }
-  .profile-pic { width: 35px; height: 35px; }
-}
 </style>
 
 <script>
 const GAS_API_URL = "https://script.google.com/macros/s/AKfycby8UHbXQCHBU6gWCE_Fqiuem6WT6W_JVAa5_ij4vdB0thwaePT_VzL46dAXrJ6ciOPb/exec";
-const FORM_LINKI = "https://docs.google.com/forms/d/1nyG8pPEeuIZyYE_gPN05CfqqEDc4izi78-m7GdCaPJM/viewform";
 
 let familyData = [];
 let collapsedNodes = new Set();
@@ -239,19 +183,17 @@ let scale = 1;
 let panX = 0;
 let panY = 0;
 let startX, startY, isPanning = false;
+let pinchStartDistance = null;
+let pinchStartScale = 1;
 
 google.charts.load('current', {packages:["orgchart"]});
 google.charts.setOnLoadCallback(fetchFamilyData);
 
 function fetchFamilyData() {
-  document.getElementById('chart_div').innerHTML = 'Veriler yükleniyor...';
   fetch(GAS_API_URL)
     .then(res => res.json())
     .then(data => drawChart(data))
-    .catch(err => {
-      console.error("Veri çekme hatası:", err);
-      document.getElementById('chart_div').innerHTML = 'Veri alınamadı. Lütfen bağlantıyı kontrol edin.';
-    });
+    .catch(err => console.error("Veri hatası:", err));
 }
 
 function drawChart(dataArray) {
@@ -264,10 +206,6 @@ function drawChart(dataArray) {
   for (const person of familyData) {
     const imageUrl = person.base64Image || 'https://via.placeholder.com/60?text=NO_PIC';
     const nameDisplay = person.id.split(' - ')[0] || person.id;
-    const dateObj = new Date(person.birthDate);
-    const birthDateDisplay = !isNaN(dateObj.getTime()) ? dateObj.toLocaleDateString('tr-TR') : 'Bilinmiyor';
-
-    const tooltip = `Doğum: ${birthDateDisplay}\nTelefon: ${person.phone || 'Yok'}\nAçıklama: ${person.description || 'Yok'}`;
     const hasChild = familyData.some(p => p.parent === person.id);
     const toggleBtn = hasChild ? `<div class="toggle-icon" onclick="toggleNode(event, '${person.id}')">${collapsedNodes.has(person.id) ? '+' : '−'}</div>` : '';
 
@@ -279,7 +217,7 @@ function drawChart(dataArray) {
         <div class="details-icon" onclick="showDetails(event, '${person.id}')">ⓘ</div>
       </div>`;
 
-    dataTable.addRow([{v: person.id, f: nodeHTML}, person.parent || '', tooltip]);
+    dataTable.addRow([{v: person.id, f: nodeHTML}, person.parent || '', nameDisplay]);
   }
 
   const chartWrapper = document.createElement('div');
@@ -287,40 +225,73 @@ function drawChart(dataArray) {
   const chartContainer = document.getElementById('chart_div');
   chartContainer.innerHTML = '';
   chartContainer.appendChild(chartWrapper);
+
   const chart = new google.visualization.OrgChart(chartWrapper);
   chart.draw(dataTable, {allowHtml: true});
   collapsedNodes.forEach(id => hideChildren(id));
 
-  enablePan(chartContainer, chartWrapper);
+  centerChart();
+  enablePanAndPinch(chartContainer, chartWrapper);
 }
 
-function enablePan(container, wrapper) {
-  container.onmousedown = (e) => {
+function centerChart() {
+  const wrapper = document.querySelector('.chart-zoom-wrapper');
+  const rect = wrapper.getBoundingClientRect();
+  panX = window.innerWidth / 2 - rect.width / 2;
+  panY = window.innerHeight / 2 - rect.height / 2;
+  wrapper.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
+}
+
+function enablePanAndPinch(container, wrapper) {
+  container.addEventListener('mousedown', (e) => {
     isPanning = true;
     startX = e.clientX - panX;
     startY = e.clientY - panY;
-  };
-  container.onmouseup = () => isPanning = false;
-  container.onmouseleave = () => isPanning = false;
-  container.onmousemove = (e) => {
+  });
+  container.addEventListener('mouseup', () => isPanning = false);
+  container.addEventListener('mouseleave', () => isPanning = false);
+  container.addEventListener('mousemove', (e) => {
     if (!isPanning) return;
     panX = e.clientX - startX;
     panY = e.clientY - startY;
     wrapper.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
-  };
+  });
 
-  container.ontouchstart = (e) => {
-    isPanning = true;
-    startX = e.touches[0].clientX - panX;
-    startY = e.touches[0].clientY - panY;
-  };
-  container.ontouchend = () => isPanning = false;
-  container.ontouchmove = (e) => {
-    if (!isPanning) return;
-    panX = e.touches[0].clientX - startX;
-    panY = e.touches[0].clientY - startY;
+  container.addEventListener('touchstart', (e) => {
+    if (e.touches.length === 1) {
+      isPanning = true;
+      startX = e.touches[0].clientX - panX;
+      startY = e.touches[0].clientY - panY;
+    } else if (e.touches.length === 2) {
+      isPanning = false;
+      pinchStartDistance = getPinchDistance(e);
+      pinchStartScale = scale;
+    }
+  });
+
+  container.addEventListener('touchmove', (e) => {
+    e.preventDefault();
+    if (e.touches.length === 1 && isPanning) {
+      panX = e.touches[0].clientX - startX;
+      panY = e.touches[0].clientY - startY;
+    } else if (e.touches.length === 2) {
+      const newDistance = getPinchDistance(e);
+      const pinchRatio = newDistance / pinchStartDistance;
+      scale = Math.min(Math.max(0.3, pinchStartScale * pinchRatio), 3);
+    }
     wrapper.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
-  };
+  });
+
+  container.addEventListener('touchend', () => {
+    isPanning = false;
+    pinchStartDistance = null;
+  });
+}
+
+function getPinchDistance(e) {
+  const dx = e.touches[0].clientX - e.touches[1].clientX;
+  const dy = e.touches[0].clientY - e.touches[1].clientY;
+  return Math.sqrt(dx*dx + dy*dy);
 }
 
 function zoomIn() {
@@ -373,19 +344,10 @@ function showDetails(event, id) {
   event.stopPropagation();
   const person = familyData.find(p => p.id === id);
   if (!person) return;
-  const dateObj = new Date(person.birthDate);
-  const birthDateDisplay = !isNaN(dateObj.getTime()) ? dateObj.toLocaleDateString('tr-TR') : 'Bilinmiyor';
-  const imageUrl = person.base64Image || person.imageUrl || 'https://via.placeholder.com/200?text=No+Image';
-
-  const html = `
-    <img src="${imageUrl}" onerror="this.style.display='none'">
+  document.getElementById('modal-content').innerHTML = `
     <h2>${person.id.split(' - ')[0]}</h2>
-    <p><strong>Doğum Tarihi:</strong> ${birthDateDisplay}</p>
-    <p><strong>Telefon:</strong> ${person.phone || 'Yok'}</p>
-    <p><strong>Açıklama:</strong> ${person.description || 'Yok'}</p>
-    ${person.imageUrl ? `<p><a href="${person.imageUrl}" target="_blank">Orijinal Fotoğrafı Gör</a></p>` : ''}`;
-
-  document.getElementById('modal-content').innerHTML = html;
+    <p>${person.description || ''}</p>
+  `;
   document.getElementById('details-modal').style.display = 'block';
 }
 
@@ -395,9 +357,8 @@ function closeModal() {
 </script>
 </head>
 <body>
-<header>
-  <h1>👨‍👩‍👧‍👦 Day Sülalesi Soyağacı</h1>
-</header>
+<header>👨‍👩‍👧‍👦 Day Sülalesi Soyağacı</header>
+
 <div class="container">
   <div class="zoom-controls">
     <button onclick="zoomIn()">➕</button>
