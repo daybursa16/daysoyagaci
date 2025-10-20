@@ -84,9 +84,8 @@
       transform-origin: top center;
     }
 
-    /* OrgChart düğümleri */
     div.google-visualization-orgchart-node {
-      width: 80px !important;
+      width: 90px !important;
       padding: 0 !important;
     }
 
@@ -99,9 +98,11 @@
       flex-direction: column;
       align-items: center;
       text-align: center;
-      width: 75px;
+      width: 90px;
       transition: all 0.2s ease;
       position: relative;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
     }
 
     .person-node:hover {
@@ -122,10 +123,29 @@
       font-size: 11px;
       font-weight: 600;
       color: var(--text-dark);
-      max-width: 120px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
+      max-width: 90px;
+      white-space: normal;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+      line-height: 1.2em;
+    }
+
+    .toggle-icon {
+      margin-top: 4px;
+      background: var(--primary);
+      color: white;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      font-size: 14px;
+      line-height: 18px;
+      cursor: pointer;
+      user-select: none;
+      display: inline-block;
+    }
+
+    .toggle-icon:hover {
+      background: #2563eb;
     }
 
     .details-icon {
@@ -208,20 +228,21 @@
       text-decoration: underline;
     }
 
-    /* Mobil uyum */
     @media (max-width: 768px) {
       h1 { font-size: 1.5rem; }
       .explanation { font-size: 0.9em; }
-      .person-node { width: 65px; }
+      .person-node { width: 70px; }
+      .name { max-width: 70px; font-size: 10px; }
       .profile-pic { width: 35px; height: 35px; }
     }
   </style>
 
   <script>
-    var GAS_API_URL = "https://script.google.com/macros/s/AKfycby8UHbXQCHBU6gWCE_Fqiuem6WT6W_JVAa5_ij4vdB0thwaePT_VzL46dAXrJ6ciOPb/exec"; 
-    var FORM_LINKI = "https://docs.google.com/forms/d/1nyG8pPEeuIZyYE_gPN05CfqqEDc4izi78-m7GdCaPJM/viewform"; 
+    const GAS_API_URL = "https://script.google.com/macros/s/AKfycby8UHbXQCHBU6gWCE_Fqiuem6WT6W_JVAa5_ij4vdB0thwaePT_VzL46dAXrJ6ciOPb/exec"; 
+    const FORM_LINKI = "https://docs.google.com/forms/d/1nyG8pPEeuIZyYE_gPN05CfqqEDc4izi78-m7GdCaPJM/viewform"; 
+    let familyData = [];
+    let collapsedNodes = new Set();
 
-    var familyData; 
     google.charts.load('current', {packages:["orgchart"]});
     google.charts.setOnLoadCallback(fetchFamilyData);
 
@@ -238,21 +259,26 @@
 
     function drawChart(dataArray) {
       familyData = dataArray;
-      var dataTable = new google.visualization.DataTable();
+      const dataTable = new google.visualization.DataTable();
       dataTable.addColumn('string', 'Name');
       dataTable.addColumn('string', 'Parent');
       dataTable.addColumn('string', 'ToolTip');
 
-      for (var person of familyData) {
-        var imageUrl = person.base64Image || 'https://via.placeholder.com/60?text=NO_PIC';
-        var nameDisplay = person.id.split(' - ')[0] || person.id;
-        var dateObj = new Date(person.birthDate);
-        var birthDateDisplay = !isNaN(dateObj.getTime()) ? dateObj.toLocaleDateString('tr-TR') : 'Bilinmiyor';
-        var tooltip = `Doğum: ${birthDateDisplay}\nTelefon: ${person.phone || 'Yok'}\nAçıklama: ${person.description || 'Yok'}`;
-        var nodeHTML = `
-          <div class="person-node">
+      for (const person of familyData) {
+        const imageUrl = person.base64Image || 'https://via.placeholder.com/60?text=NO_PIC';
+        const nameDisplay = person.id.split(' - ')[0] || person.id;
+        const dateObj = new Date(person.birthDate);
+        const birthDateDisplay = !isNaN(dateObj.getTime()) ? dateObj.toLocaleDateString('tr-TR') : 'Bilinmiyor';
+        const tooltip = `Doğum: ${birthDateDisplay}\nTelefon: ${person.phone || 'Yok'}\nAçıklama: ${person.description || 'Yok'}`;
+
+        const hasChild = familyData.some(p => p.parent === person.id);
+        const toggleBtn = hasChild ? `<div class="toggle-icon" onclick="toggleNode(event, '${person.id}')">${collapsedNodes.has(person.id) ? '+' : '−'}</div>` : '';
+
+        const nodeHTML = `
+          <div class="person-node" data-id="${person.id}">
             <img src="${imageUrl}" class="profile-pic" onerror="this.src='https://via.placeholder.com/40?text=NO'">
             <div class="name">${nameDisplay}</div>
+            ${toggleBtn}
             <div class="details-icon" onclick="showDetails(event, '${person.id}')">ⓘ</div>
           </div>`;
         dataTable.addRow([{v: person.id, f: nodeHTML}, person.parent || '', tooltip]);
@@ -265,8 +291,9 @@
       chartContainer.appendChild(chartWrapper);
 
       const chart = new google.visualization.OrgChart(chartWrapper);
-      chart.draw(dataTable, {allowHtml: true, allowCollapse: true});
+      chart.draw(dataTable, {allowHtml: true});
 
+      collapsedNodes.forEach(id => hideChildren(id));
       setTimeout(adjustChartScale, 300);
       window.addEventListener('resize', adjustChartScale);
     }
@@ -275,29 +302,64 @@
       const wrapper = document.querySelector('.chart-zoom-wrapper');
       const container = document.getElementById('chart_div');
       if (!wrapper || !container) return;
-
-      // Mevcut zoomu değiştirmiyoruz
       const scrollWidth = wrapper.getBoundingClientRect().width;
       const scrollHeight = wrapper.getBoundingClientRect().height;
       container.scrollLeft = (scrollWidth - container.clientWidth) / 2;
       container.scrollTop = (scrollHeight - container.clientHeight) / 2;
     }
 
+    function toggleNode(event, id) {
+      event.stopPropagation();
+      const icon = event.target;
+      if (collapsedNodes.has(id)) {
+        collapsedNodes.delete(id);
+        showChildren(id);
+        icon.textContent = '−';
+      } else {
+        collapsedNodes.add(id);
+        hideChildren(id);
+        icon.textContent = '+';
+      }
+    }
+
+    function hideChildren(parentId) {
+      const rows = document.querySelectorAll(`.person-node`);
+      rows.forEach(r => {
+        const id = r.getAttribute('data-id');
+        const nodeData = familyData.find(p => p.id === id);
+        if (nodeData && nodeData.parent === parentId) {
+          r.closest('tr').style.display = 'none';
+          hideChildren(id);
+        }
+      });
+    }
+
+    function showChildren(parentId) {
+      const rows = document.querySelectorAll(`.person-node`);
+      rows.forEach(r => {
+        const id = r.getAttribute('data-id');
+        const nodeData = familyData.find(p => p.id === id);
+        if (nodeData && nodeData.parent === parentId) {
+          r.closest('tr').style.display = '';
+          if (!collapsedNodes.has(id)) showChildren(id);
+        }
+      });
+    }
+
     function showDetails(event, id) {
       event.stopPropagation();
-      var person = familyData.find(p => p.id === id);
+      const person = familyData.find(p => p.id === id);
       if (!person) return;
-      var dateObj = new Date(person.birthDate);
-      var birthDateDisplay = !isNaN(dateObj.getTime()) ? dateObj.toLocaleDateString('tr-TR') : 'Bilinmiyor';
-      var imageUrl = person.base64Image || person.imageUrl || 'https://via.placeholder.com/200?text=No+Image';
-      var html = `
+      const dateObj = new Date(person.birthDate);
+      const birthDateDisplay = !isNaN(dateObj.getTime()) ? dateObj.toLocaleDateString('tr-TR') : 'Bilinmiyor';
+      const imageUrl = person.base64Image || person.imageUrl || 'https://via.placeholder.com/200?text=No+Image';
+      const html = `
         <img src="${imageUrl}" onerror="this.style.display='none'">
         <h2>${person.id.split(' - ')[0]}</h2>
         <p><strong>Doğum Tarihi:</strong> ${birthDateDisplay}</p>
         <p><strong>Telefon:</strong> ${person.phone || 'Yok'}</p>
         <p><strong>Açıklama:</strong> ${person.description || 'Yok'}</p>
-        ${person.imageUrl ? `<p><a href="${person.imageUrl}" target="_blank">Orijinal Fotoğrafı Gör</a></p>` : ''}
-      `;
+        ${person.imageUrl ? `<p><a href="${person.imageUrl}" target="_blank">Orijinal Fotoğrafı Gör</a></p>` : ''}`;
       document.getElementById('modal-content').innerHTML = html;
       document.getElementById('details-modal').style.display = 'block';
     }
@@ -314,10 +376,14 @@
 
   <div class="container">
     <div class="explanation">
-      Bu soyağacı <strong>Berat Day</strong> tarafından dinamik olarak oluşturulmuştur. Yapılan herhangi bir girişte düzenleme aynı isim ve tarih seçerek oluşturulabilmektedir. Farklı isimle yanlışlıkla oluşturulan yeni olmayan bir aile bireyi için iletişime geçiniz. İletişim için <strong>05434813373</strong>.
+      Bu soyağacı <strong>Berat Day</strong> tarafından dinamik olarak oluşturulmuştur. Yapılan herhangi bir girişte düzenleme aynı isim ve tarih seçerek oluşturulabilmektedir. 
+      Farklı isimle yanlışlıkla oluşturulan yeni olmayan bir aile bireyi için iletişime geçiniz. 
+      İletişim için <strong>05434813373</strong>.
       <br><br>
       Buradan kişiler ekleyebilir ve güncelleyebilirsiniz:
-      <a href="javascript:void(0);" onclick="window.open(FORM_LINKI, '_blank');" class="new-entry-link">+ Yeni Kişi / Güncelleme Formu</a><br>
+      <a href="javascript:void(0);" onclick="window.open(FORM_LINKI, '_blank');" class="new-entry-link">
+        + Yeni Kişi / Güncelleme Formu
+      </a><br>
     </div>
     <div id="chart_div">Yükleniyor...</div>
   </div>
@@ -330,4 +396,3 @@
   </div>
 </body>
 </html>
-
