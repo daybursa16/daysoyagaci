@@ -82,6 +82,7 @@
     .chart-zoom-wrapper {
       display: inline-block;
       transform-origin: top center;
+      transition: transform 0.3s ease;
     }
 
     div.google-visualization-orgchart-node {
@@ -302,10 +303,23 @@
       const wrapper = document.querySelector('.chart-zoom-wrapper');
       const container = document.getElementById('chart_div');
       if (!wrapper || !container) return;
-      const scrollWidth = wrapper.getBoundingClientRect().width;
-      const scrollHeight = wrapper.getBoundingClientRect().height;
-      container.scrollLeft = (scrollWidth - container.clientWidth) / 2;
-      container.scrollTop = (scrollHeight - container.clientHeight) / 2;
+
+      const chartWidth = wrapper.getBoundingClientRect().width;
+      const chartHeight = wrapper.getBoundingClientRect().height;
+      const containerWidth = container.clientWidth;
+      const containerHeight = container.clientHeight;
+
+      let scale = 1;
+      if (window.innerWidth < 768) {
+        scale = Math.min(containerWidth / chartWidth, containerHeight / chartHeight) * 0.9;
+        if (scale > 1) scale = 1;
+      }
+
+      wrapper.style.transform = `scale(${scale})`;
+      wrapper.style.transformOrigin = 'top center';
+
+      container.scrollLeft = (chartWidth * scale - containerWidth) / 2;
+      container.scrollTop = (chartHeight * scale - containerHeight) / 2;
     }
 
     function toggleNode(event, id) {
