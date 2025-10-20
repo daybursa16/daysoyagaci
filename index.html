@@ -6,93 +6,68 @@
   <title>Day Sülalesi Soyağacı</title>
   <script src="https://www.gstatic.com/charts/loader.js"></script>
   <style>
-    :root {
-      --bg-color: #f8fafc;
-      --card-bg: #ffffff;
-      --primary: #3b82f6;
-      --border: #e2e8f0;
-      --text-dark: #1e293b;
-      --text-light: #64748b;
-    }
-
     html, body {
       height: 100%;
       margin: 0;
       padding: 0;
-      background-color: var(--bg-color);
+      overflow: hidden;
+      background: #f8fafc;
       font-family: "Segoe UI", Roboto, sans-serif;
-      color: var(--text-dark);
-      overflow-x: auto;
     }
 
     header {
-      background: var(--card-bg);
-      padding: 20px;
+      background: #fff;
+      padding: 15px;
       box-shadow: 0 2px 6px rgba(0,0,0,0.05);
       text-align: center;
-      width: 100%;
     }
 
     h1 {
       margin: 0;
-      font-size: 2rem;
-      color: var(--primary);
-    }
-
-    .container {
-      max-width: 100%;
-      width: 100%;
-      padding: 20px;
-      box-sizing: border-box;
-    }
-
-    .explanation {
-      background-color: #eef6ff;
-      border: 1px solid #d0e3ff;
-      padding: 15px;
-      border-radius: 8px;
-      font-size: 1em;
-      margin-bottom: 20px;
-      line-height: 1.6;
-    }
-
-    .explanation strong {
-      color: var(--primary);
-    }
-
-    .new-entry-link {
-      display: inline-block;
-      margin-top: 10px;
-      font-weight: 600;
-      color: #16a34a;
-      text-decoration: none;
-    }
-
-    .new-entry-link:hover {
-      text-decoration: underline;
+      font-size: 1.8rem;
+      color: #2563eb;
     }
 
     #chart_div {
       width: 100%;
-      min-height: 400px;
+      height: calc(100vh - 80px);
       overflow: auto;
-      text-align: center;
+      position: relative;
+      touch-action: none;
     }
 
     .chart-zoom-wrapper {
       display: inline-block;
-      transform-origin: top center;
-      transition: transform 0.3s ease;
+      transform-origin: center center;
     }
 
-    div.google-visualization-orgchart-node {
-      width: 90px !important;
-      padding: 0 !important;
+    .zoom-controls {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      display: flex;
+      flex-direction: column;
+      z-index: 100;
+    }
+
+    .zoom-controls button {
+      padding: 8px;
+      font-size: 18px;
+      border: none;
+      background: #fff;
+      cursor: pointer;
+    }
+
+    .zoom-controls button:hover {
+      background: #f1f5f9;
     }
 
     .person-node {
       background: #f9fafb;
-      border: 1px solid var(--border);
+      border: 1px solid #e2e8f0;
       border-radius: 10px;
       padding: 5px 3px;
       display: flex;
@@ -100,18 +75,11 @@
       align-items: center;
       text-align: center;
       width: 90px;
-      transition: all 0.2s ease;
       position: relative;
       word-wrap: break-word;
-      overflow-wrap: break-word;
     }
 
-    .person-node:hover {
-      background: #f1f5f9;
-      transform: scale(1.04);
-    }
-
-    .profile-pic {
+    .person-node img {
       width: 40px;
       height: 40px;
       border-radius: 50%;
@@ -123,7 +91,6 @@
     .name {
       font-size: 11px;
       font-weight: 600;
-      color: var(--text-dark);
       max-width: 90px;
       white-space: normal;
       word-wrap: break-word;
@@ -133,7 +100,7 @@
 
     .toggle-icon {
       margin-top: 4px;
-      background: var(--primary);
+      background: #2563eb;
       color: white;
       width: 18px;
       height: 18px;
@@ -142,120 +109,23 @@
       line-height: 18px;
       cursor: pointer;
       user-select: none;
-      display: inline-block;
-    }
-
-    .toggle-icon:hover {
-      background: #2563eb;
-    }
-
-    .details-icon {
-      position: absolute;
-      top: 2px;
-      right: 4px;
-      cursor: pointer;
-      color: var(--primary);
-      font-weight: bold;
-      font-size: 1em;
-    }
-
-    /* Modal */
-    .modal {
-      display: none;
-      position: fixed;
-      z-index: 1000;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(0,0,0,0.4);
-      backdrop-filter: blur(3px);
-    }
-
-    .modal-content {
-      background-color: #fff;
-      margin: 5% auto;
-      padding: 20px;
-      border-radius: 10px;
-      width: 90%;
-      max-width: 420px;
-      box-shadow: 0 8px 30px rgba(0,0,0,0.2);
-      animation: fadeIn 0.3s ease;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(-20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    .close {
-      float: right;
-      font-size: 26px;
-      color: #aaa;
-      cursor: pointer;
-    }
-
-    .close:hover {
-      color: var(--primary);
-    }
-
-    .modal-content img {
-      width: 100%;
-      max-height: 180px;
-      object-fit: contain;
-      border-radius: 8px;
-      margin-bottom: 10px;
-    }
-
-    .modal-content h2 {
-      margin-top: 0;
-      color: var(--primary);
-      font-size: 1.3rem;
-      text-align: center;
-    }
-
-    .modal-content p {
-      margin: 8px 0;
-      font-size: 0.95rem;
-    }
-
-    .modal-content a {
-      color: var(--primary);
-      text-decoration: none;
-      font-size: 0.9rem;
-    }
-
-    .modal-content a:hover {
-      text-decoration: underline;
-    }
-
-    @media (max-width: 768px) {
-      h1 { font-size: 1.5rem; }
-      .explanation { font-size: 0.9em; }
-      .person-node { width: 70px; }
-      .name { max-width: 70px; font-size: 10px; }
-      .profile-pic { width: 35px; height: 35px; }
     }
   </style>
 
   <script>
-    const GAS_API_URL = "https://script.google.com/macros/s/AKfycby8UHbXQCHBU6gWCE_Fqiuem6WT6W_JVAa5_ij4vdB0thwaePT_VzL46dAXrJ6ciOPb/exec"; 
-    const FORM_LINKI = "https://docs.google.com/forms/d/1nyG8pPEeuIZyYE_gPN05CfqqEDc4izi78-m7GdCaPJM/viewform"; 
+    const GAS_API_URL = "https://script.google.com/macros/s/AKfycby8UHbXQCHBU6gWCE_Fqiuem6WT6W_JVAa5_ij4vdB0thwaePT_VzL46dAXrJ6ciOPb/exec";
     let familyData = [];
     let collapsedNodes = new Set();
+    let zoomLevel = 1;
 
     google.charts.load('current', {packages:["orgchart"]});
     google.charts.setOnLoadCallback(fetchFamilyData);
 
     function fetchFamilyData() {
-      document.getElementById('chart_div').innerHTML = 'Veriler yükleniyor...';
       fetch(GAS_API_URL)
         .then(res => res.json())
         .then(data => drawChart(data))
-        .catch(err => {
-          console.error("Veri çekme hatası:", err);
-          document.getElementById('chart_div').innerHTML = 'Veri alınamadı. Lütfen bağlantıyı kontrol edin.';
-        });
+        .catch(err => console.error(err));
     }
 
     function drawChart(dataArray) {
@@ -265,25 +135,18 @@
       dataTable.addColumn('string', 'Parent');
       dataTable.addColumn('string', 'ToolTip');
 
-      for (const person of familyData) {
-        const imageUrl = person.base64Image || 'https://via.placeholder.com/60?text=NO_PIC';
-        const nameDisplay = person.id.split(' - ')[0] || person.id;
-        const dateObj = new Date(person.birthDate);
-        const birthDateDisplay = !isNaN(dateObj.getTime()) ? dateObj.toLocaleDateString('tr-TR') : 'Bilinmiyor';
-        const tooltip = `Doğum: ${birthDateDisplay}\nTelefon: ${person.phone || 'Yok'}\nAçıklama: ${person.description || 'Yok'}`;
-
-        const hasChild = familyData.some(p => p.parent === person.id);
+      dataArray.forEach(person => {
+        const img = person.base64Image || 'https://via.placeholder.com/60?text=NO';
+        const hasChild = dataArray.some(p => p.parent === person.id);
         const toggleBtn = hasChild ? `<div class="toggle-icon" onclick="toggleNode(event, '${person.id}')">${collapsedNodes.has(person.id) ? '+' : '−'}</div>` : '';
-
         const nodeHTML = `
           <div class="person-node" data-id="${person.id}">
-            <img src="${imageUrl}" class="profile-pic" onerror="this.src='https://via.placeholder.com/40?text=NO'">
-            <div class="name">${nameDisplay}</div>
+            <img src="${img}" onerror="this.src='https://via.placeholder.com/40?text=NO'">
+            <div class="name">${person.id.split(' - ')[0]}</div>
             ${toggleBtn}
-            <div class="details-icon" onclick="showDetails(event, '${person.id}')">ⓘ</div>
           </div>`;
-        dataTable.addRow([{v: person.id, f: nodeHTML}, person.parent || '', tooltip]);
-      }
+        dataTable.addRow([{v: person.id, f: nodeHTML}, person.parent || '', '']);
+      });
 
       const chartWrapper = document.createElement('div');
       chartWrapper.className = 'chart-zoom-wrapper';
@@ -293,33 +156,16 @@
 
       const chart = new google.visualization.OrgChart(chartWrapper);
       chart.draw(dataTable, {allowHtml: true});
-
       collapsedNodes.forEach(id => hideChildren(id));
-      setTimeout(adjustChartScale, 300);
-      window.addEventListener('resize', adjustChartScale);
+
+      setTimeout(centerChart, 300);
     }
 
-    function adjustChartScale() {
-      const wrapper = document.querySelector('.chart-zoom-wrapper');
+    function centerChart() {
       const container = document.getElementById('chart_div');
-      if (!wrapper || !container) return;
-
-      const chartWidth = wrapper.getBoundingClientRect().width;
-      const chartHeight = wrapper.getBoundingClientRect().height;
-      const containerWidth = container.clientWidth;
-      const containerHeight = container.clientHeight;
-
-      let scale = 1;
-      if (window.innerWidth < 768) {
-        scale = Math.min(containerWidth / chartWidth, containerHeight / chartHeight) * 0.9;
-        if (scale > 1) scale = 1;
-      }
-
-      wrapper.style.transform = `scale(${scale})`;
-      wrapper.style.transformOrigin = 'top center';
-
-      container.scrollLeft = (chartWidth * scale - containerWidth) / 2;
-      container.scrollTop = (chartHeight * scale - containerHeight) / 2;
+      const wrapper = document.querySelector('.chart-zoom-wrapper');
+      container.scrollLeft = (wrapper.scrollWidth - container.clientWidth) / 2;
+      container.scrollTop = (wrapper.scrollHeight - container.clientHeight) / 2;
     }
 
     function toggleNode(event, id) {
@@ -360,26 +206,14 @@
       });
     }
 
-    function showDetails(event, id) {
-      event.stopPropagation();
-      const person = familyData.find(p => p.id === id);
-      if (!person) return;
-      const dateObj = new Date(person.birthDate);
-      const birthDateDisplay = !isNaN(dateObj.getTime()) ? dateObj.toLocaleDateString('tr-TR') : 'Bilinmiyor';
-      const imageUrl = person.base64Image || person.imageUrl || 'https://via.placeholder.com/200?text=No+Image';
-      const html = `
-        <img src="${imageUrl}" onerror="this.style.display='none'">
-        <h2>${person.id.split(' - ')[0]}</h2>
-        <p><strong>Doğum Tarihi:</strong> ${birthDateDisplay}</p>
-        <p><strong>Telefon:</strong> ${person.phone || 'Yok'}</p>
-        <p><strong>Açıklama:</strong> ${person.description || 'Yok'}</p>
-        ${person.imageUrl ? `<p><a href="${person.imageUrl}" target="_blank">Orijinal Fotoğrafı Gör</a></p>` : ''}`;
-      document.getElementById('modal-content').innerHTML = html;
-      document.getElementById('details-modal').style.display = 'block';
+    function zoomIn() {
+      zoomLevel += 0.1;
+      document.querySelector('.chart-zoom-wrapper').style.transform = `scale(${zoomLevel})`;
     }
 
-    function closeModal() {
-      document.getElementById('details-modal').style.display = 'none';
+    function zoomOut() {
+      zoomLevel = Math.max(0.3, zoomLevel - 0.1);
+      document.querySelector('.chart-zoom-wrapper').style.transform = `scale(${zoomLevel})`;
     }
   </script>
 </head>
@@ -388,25 +222,11 @@
     <h1>👨‍👩‍👧‍👦 Day Sülalesi Soyağacı</h1>
   </header>
 
-  <div class="container">
-    <div class="explanation">
-      Bu soyağacı <strong>Berat Day</strong> tarafından dinamik olarak oluşturulmuştur. Yapılan herhangi bir girişte düzenleme aynı isim ve tarih seçerek oluşturulabilmektedir. 
-      Farklı isimle yanlışlıkla oluşturulan yeni olmayan bir aile bireyi için iletişime geçiniz. 
-      İletişim için <strong>05434813373</strong>.
-      <br><br>
-      Buradan kişiler ekleyebilir ve güncelleyebilirsiniz:
-      <a href="javascript:void(0);" onclick="window.open(FORM_LINKI, '_blank');" class="new-entry-link">
-        + Yeni Kişi / Güncelleme Formu
-      </a><br>
-    </div>
-    <div id="chart_div">Yükleniyor...</div>
-  </div>
+  <div id="chart_div"></div>
 
-  <div id="details-modal" class="modal" onclick="closeModal()">
-    <div class="modal-content" onclick="event.stopPropagation()">
-      <span class="close" onclick="closeModal()">&times;</span>
-      <div id="modal-content"></div>
-    </div>
+  <div class="zoom-controls">
+    <button onclick="zoomIn()">+</button>
+    <button onclick="zoomOut()">−</button>
   </div>
 </body>
 </html>
