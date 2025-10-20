@@ -8,9 +8,9 @@
     html, body {
       margin: 0;
       padding: 0;
-      overflow: hidden;
       height: 100%;
       font-family: Arial, sans-serif;
+      overflow: hidden;
     }
 
     header {
@@ -26,21 +26,18 @@
       z-index: 1000;
     }
 
-    .container {
-      display: flex;
-      flex-direction: column;
-      height: 100%;
-      width: 100%;
-      box-sizing: border-box;
-      padding-top: 100px; /* Header yüksekliği kadar boşluk */
-    }
-
     .explanation {
       background: #f0f0f0;
-      padding: 10px;
+      padding: 12px;
       text-align: center;
       font-size: 14px;
       line-height: 1.4;
+      position: fixed;
+      top: 60px;
+      left: 0;
+      width: 100%;
+      z-index: 999;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
 
     .new-entry-link {
@@ -50,10 +47,14 @@
     }
 
     #chart_div {
-      flex: 1;
+      position: absolute;
+      top: 140px; /* header + explanation yüksekliği kadar */
+      left: 0;
+      right: 0;
+      bottom: 0;
       overflow: hidden;
-      position: relative;
       touch-action: none;
+      background: #fff;
     }
 
     #tree-content {
@@ -137,22 +138,20 @@
     <h1>👨‍👩‍👧‍👦 Day Sülalesi Soyağacı</h1>
   </header>
 
-  <div class="container">
-    <div class="explanation">
-      Bu soyağacı <strong>Berat Day</strong> tarafından dinamik olarak oluşturulmuştur. 
-      Yapılan herhangi bir girişte düzenleme aynı isim ve tarih seçerek oluşturulabilmektedir. 
-      Farklı isimle yanlışlıkla oluşturulan yeni olmayan bir aile bireyi için iletişime geçiniz. 
-      İletişim için <strong>05434813373</strong>.
-      <br><br>
-      Buradan kişiler ekleyebilir ve güncelleyebilirsiniz:
-      <a href="javascript:void(0);" onclick="window.open(FORM_LINKI, '_blank');" class="new-entry-link">
-        + Yeni Kişi / Güncelleme Formu
-      </a><br>
-    </div>
+  <div class="explanation">
+    Bu soyağacı <strong>Berat Day</strong> tarafından dinamik olarak oluşturulmuştur. 
+    Yapılan herhangi bir girişte düzenleme aynı isim ve tarih seçerek oluşturulabilmektedir. 
+    Farklı isimle yanlışlıkla oluşturulan yeni olmayan bir aile bireyi için iletişime geçiniz. 
+    İletişim için <strong>05434813373</strong>.
+    <br><br>
+    Buradan kişiler ekleyebilir ve güncelleyebilirsiniz:
+    <a href="javascript:void(0);" onclick="window.open(FORM_LINKI, '_blank');" class="new-entry-link">
+      + Yeni Kişi / Güncelleme Formu
+    </a>
+  </div>
 
-    <div id="chart_div">
-      <div id="tree-content"></div>
-    </div>
+  <div id="chart_div">
+    <div id="tree-content"></div>
   </div>
 
   <div id="zoom-controls">
@@ -161,7 +160,7 @@
   </div>
 
   <script>
-    // ✅ TEST verisi - senin dinamik verine bağlanacak
+    // 📌 Test verisi - senin verinle değiştirilebilir
     const treeData = {
       name: "Kök Ebeveyn",
       children: [
@@ -289,7 +288,7 @@
 
     function centerTree() {
       originX = window.innerWidth / 2;
-      originY = window.innerHeight / 2;
+      originY = (window.innerHeight - 140) / 2; // açıklama + header kadar yukarıdan boşluk
       scale = 1;
       updateTransform();
     }
