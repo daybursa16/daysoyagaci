@@ -24,10 +24,9 @@ html, body {
   overflow: hidden;
 }
 
-/* Üst başlık */
 header {
   background: var(--card-bg);
-  padding: 10px;
+  padding: 15px;
   text-align: center;
   font-size: 1.6rem;
   color: var(--primary);
@@ -41,20 +40,19 @@ header {
 .explanation {
   background: var(--card-bg);
   padding: 10px;
-  text-align: center;
   font-size: 0.9rem;
-  color: var(--text-dark);
+  text-align: center;
+  line-height: 1.4em;
   position: fixed;
-  top: 60px;
+  top: 65px;
   width: 100%;
-  z-index: 10;
+  z-index: 15;
   box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-  line-height: 1.4;
 }
 
 .container {
   position: absolute;
-  top: 150px; /* header + açıklama yüksekliği */
+  top: 145px;
   left: 0;
   right: 0;
   bottom: 0;
@@ -77,16 +75,16 @@ header {
 }
 
 .zoom-controls {
-  position: fixed;
-  bottom: 20px;
-  left: 20px;
+  position: absolute;
+  top: 15px;
+  right: 15px;
   background: var(--card-bg);
   border: 1px solid var(--border);
   border-radius: 6px;
   box-shadow: 0 2px 5px rgba(0,0,0,0.1);
   display: flex;
   flex-direction: column;
-  z-index: 20;
+  z-index: 30;
 }
 .zoom-controls button {
   background: var(--card-bg);
@@ -104,7 +102,7 @@ header {
   background: #f9fafb;
   border: 1px solid var(--border);
   border-radius: 10px;
-  padding: 5px 3px;
+  padding: 5px 3px 8px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -139,7 +137,7 @@ header {
 }
 
 .toggle-icon {
-  margin-top: 6px;
+  margin-top: 4px;
   background: var(--primary);
   color: white;
   width: 18px;
@@ -254,7 +252,7 @@ function centerChart() {
   const wrapper = document.querySelector('.chart-zoom-wrapper');
   const rect = wrapper.getBoundingClientRect();
   panX = window.innerWidth / 2 - rect.width / 2;
-  panY = (window.innerHeight - 150) / 2 - rect.height / 2;
+  panY = window.innerHeight / 2 - rect.height / 2;
   wrapper.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
 }
 
@@ -296,7 +294,7 @@ function enablePanAndPinch(container, wrapper) {
       scale = Math.min(Math.max(0.3, pinchStartScale * pinchRatio), 3);
     }
     wrapper.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
-  }, {passive: false});
+  });
 
   container.addEventListener('touchend', () => {
     isPanning = false;
@@ -376,12 +374,11 @@ function closeModal() {
 <header>👨‍👩‍👧‍👦 Day Sülalesi Soyağacı</header>
 
 <div class="explanation">
-  Bu soyağacı <strong>Berat Day</strong> tarafından dinamik olarak oluşturulmuştur.<br>
-  Yapılan herhangi bir girişte düzenleme aynı isim ve tarih seçerek oluşturulabilmektedir.<br>
-  Farklı isimle yanlışlıkla oluşturulan yeni olmayan bir aile bireyi için iletişime geçiniz.<br>
-  İletişim için <strong>05434813373</strong>.<br><br>
-  Buradan kişiler ekleyebilir ve güncelleyebilirsiniz:
-  <a href="javascript:void(0);" onclick="window.open('https://forms.google.com', '_blank')">+ Yeni Kişi / Güncelleme Formu</a>
+  Bu soyağacı <strong>Berat Day</strong> tarafından oluşturulmuştur.<br>
+  Yeni kişi eklemek veya bilgileri güncellemek için:<br>
+  <a href="javascript:void(0);" onclick="window.open('https://docs.google.com/forms', '_blank');" class="new-entry-link">
+    ➕ Yeni Kişi / Güncelleme Formu
+  </a>
 </div>
 
 <div class="container">
@@ -400,3 +397,4 @@ function closeModal() {
 </div>
 </body>
 </html>
+
