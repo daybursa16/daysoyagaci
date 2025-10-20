@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Day Sülalesi Soyağacı</title>
   <script src="https://www.gstatic.com/charts/loader.js"></script>
@@ -15,12 +15,13 @@
       --text-light: #64748b;
     }
 
-    body {
-      font-family: "Segoe UI", Roboto, sans-serif;
-      background-color: var(--bg-color);
-      color: var(--text-dark);
+    html, body {
+      height: 100%;
       margin: 0;
       padding: 0;
+      background-color: var(--bg-color);
+      font-family: "Segoe UI", Roboto, sans-serif;
+      color: var(--text-dark);
       overflow-x: auto;
     }
 
@@ -29,22 +30,20 @@
       padding: 20px;
       box-shadow: 0 2px 6px rgba(0,0,0,0.05);
       text-align: center;
+      width: 100%;
     }
 
     h1 {
       margin: 0;
-      font-size: 1.6rem;
+      font-size: 2rem;
       color: var(--primary);
-      letter-spacing: 0.5px;
     }
 
     .container {
-      max-width: 900px;
-      margin: 25px auto;
-      background: var(--card-bg);
-      border-radius: 12px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+      max-width: 100%;
+      width: 100%;
       padding: 20px;
+      box-sizing: border-box;
     }
 
     .explanation {
@@ -52,7 +51,7 @@
       border: 1px solid #d0e3ff;
       padding: 15px;
       border-radius: 8px;
-      font-size: 0.95em;
+      font-size: 1em;
       margin-bottom: 20px;
       line-height: 1.6;
     }
@@ -75,12 +74,17 @@
 
     #chart_div {
       width: 100%;
-      margin-top: 25px;
-      overflow-x: auto;
+      min-height: 400px;
+      overflow: auto;
       text-align: center;
     }
 
-    /* OrgChart Düğümleri */
+    .chart-zoom-wrapper {
+      display: inline-block;
+      transform-origin: top center;
+    }
+
+    /* OrgChart düğümleri */
     div.google-visualization-orgchart-node {
       width: 80px !important;
       padding: 0 !important;
@@ -134,7 +138,7 @@
       font-size: 1em;
     }
 
-    /* Modal (Detay Penceresi) */
+    /* Modal */
     .modal {
       display: none;
       position: fixed;
@@ -149,10 +153,10 @@
 
     .modal-content {
       background-color: #fff;
-      margin: 10% auto;
+      margin: 5% auto;
       padding: 20px;
       border-radius: 10px;
-      width: 85%;
+      width: 90%;
       max-width: 420px;
       box-shadow: 0 8px 30px rgba(0,0,0,0.2);
       animation: fadeIn 0.3s ease;
@@ -203,6 +207,14 @@
     .modal-content a:hover {
       text-decoration: underline;
     }
+
+    /* Mobil uyum */
+    @media (max-width: 768px) {
+      h1 { font-size: 1.5rem; }
+      .explanation { font-size: 0.9em; }
+      .person-node { width: 65px; }
+      .profile-pic { width: 35px; height: 35px; }
+    }
   </style>
 
   <script>
@@ -246,8 +258,29 @@
         dataTable.addRow([{v: person.id, f: nodeHTML}, person.parent || '', tooltip]);
       }
 
-      var chart = new google.visualization.OrgChart(document.getElementById('chart_div'));
+      const chartWrapper = document.createElement('div');
+      chartWrapper.className = 'chart-zoom-wrapper';
+      const chartContainer = document.getElementById('chart_div');
+      chartContainer.innerHTML = '';
+      chartContainer.appendChild(chartWrapper);
+
+      const chart = new google.visualization.OrgChart(chartWrapper);
       chart.draw(dataTable, {allowHtml: true, allowCollapse: true});
+
+      setTimeout(adjustChartScale, 300);
+      window.addEventListener('resize', adjustChartScale);
+    }
+
+    function adjustChartScale() {
+      const wrapper = document.querySelector('.chart-zoom-wrapper');
+      const container = document.getElementById('chart_div');
+      if (!wrapper || !container) return;
+
+      // Mevcut zoomu değiştirmiyoruz
+      const scrollWidth = wrapper.getBoundingClientRect().width;
+      const scrollHeight = wrapper.getBoundingClientRect().height;
+      container.scrollLeft = (scrollWidth - container.clientWidth) / 2;
+      container.scrollTop = (scrollHeight - container.clientHeight) / 2;
     }
 
     function showDetails(event, id) {
@@ -263,7 +296,8 @@
         <p><strong>Doğum Tarihi:</strong> ${birthDateDisplay}</p>
         <p><strong>Telefon:</strong> ${person.phone || 'Yok'}</p>
         <p><strong>Açıklama:</strong> ${person.description || 'Yok'}</p>
-        <p><a href="${person.imageUrl}" target="_blank">Orijinal Fotoğrafı Gör</a></p>`;
+        ${person.imageUrl ? `<p><a href="${person.imageUrl}" target="_blank">Orijinal Fotoğrafı Gör</a></p>` : ''}
+      `;
       document.getElementById('modal-content').innerHTML = html;
       document.getElementById('details-modal').style.display = 'block';
     }
@@ -273,7 +307,6 @@
     }
   </script>
 </head>
-
 <body>
   <header>
     <h1>👨‍👩‍👧‍👦 Day Sülalesi Soyağacı</h1>
@@ -283,7 +316,7 @@
     <div class="explanation">
       Bu soyağacı <strong>Berat Day</strong> tarafından dinamik olarak oluşturulmuştur. Yapılan herhangi bir girişte düzenleme aynı isim ve tarih seçerek oluşturulabilmektedir. Farklı isimle yanlışlıkla oluşturulan yeni olmayan bir aile bireyi için iletişime geçiniz. İletişim için <strong>05434813373</strong>.
       <br><br>
- Buradan kişiler ekleyebilir ve güncelleyebilirsiniz: 
+      Buradan kişiler ekleyebilir ve güncelleyebilirsiniz:
       <a href="javascript:void(0);" onclick="window.open(FORM_LINKI, '_blank');" class="new-entry-link">+ Yeni Kişi / Güncelleme Formu</a><br>
     </div>
     <div id="chart_div">Yükleniyor...</div>
@@ -297,7 +330,4 @@
   </div>
 </body>
 </html>
-
-
-
 
