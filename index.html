@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Day Sülalesi Soyağacı</title>
 <script src="https://www.gstatic.com/charts/loader.js"></script>
 <style>
@@ -42,21 +42,50 @@ h1 {
 .container {
   max-width: 100%;
   width: 100%;
-  padding: 20px;
-  box-sizing: border-box;
+  height: calc(100vh - 120px);
+  position: relative;
 }
 
 #chart_div {
   width: 100%;
-  height: calc(100vh - 160px);
-  overflow: auto;
-  text-align: center;
+  height: 100%;
+  overflow: hidden;
+  touch-action: none;
+  position: relative;
 }
 
 .chart-zoom-wrapper {
   display: inline-block;
   transform-origin: top center;
-  transition: transform 0.3s ease;
+  transition: transform 0.2s ease;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.zoom-controls {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  display: flex;
+  flex-direction: column;
+  z-index: 50;
+}
+.zoom-controls button {
+  background: var(--card-bg);
+  border: none;
+  font-size: 20px;
+  padding: 8px;
+  cursor: pointer;
+  color: var(--primary);
+}
+.zoom-controls button:hover {
+  background: #f1f5f9;
 }
 
 div.google-visualization-orgchart-node {
@@ -206,6 +235,10 @@ const FORM_LINKI = "https://docs.google.com/forms/d/1nyG8pPEeuIZyYE_gPN05CfqqEDc
 
 let familyData = [];
 let collapsedNodes = new Set();
+let scale = 1;
+let panX = 0;
+let panY = 0;
+let startX, startY, isPanning = false;
 
 google.charts.load('current', {packages:["orgchart"]});
 google.charts.setOnLoadCallback(fetchFamilyData);
@@ -257,16 +290,47 @@ function drawChart(dataArray) {
   const chart = new google.visualization.OrgChart(chartWrapper);
   chart.draw(dataTable, {allowHtml: true});
   collapsedNodes.forEach(id => hideChildren(id));
-  setTimeout(adjustChartScale, 300);
-  window.addEventListener('resize', adjustChartScale);
+
+  enablePan(chartContainer, chartWrapper);
 }
 
-function adjustChartScale() {
-  const wrapper = document.querySelector('.chart-zoom-wrapper');
-  const container = document.getElementById('chart_div');
-  if (!wrapper || !container) return;
-  container.scrollLeft = (wrapper.clientWidth - container.clientWidth) / 2;
-  container.scrollTop = (wrapper.clientHeight - container.clientHeight) / 2;
+function enablePan(container, wrapper) {
+  container.onmousedown = (e) => {
+    isPanning = true;
+    startX = e.clientX - panX;
+    startY = e.clientY - panY;
+  };
+  container.onmouseup = () => isPanning = false;
+  container.onmouseleave = () => isPanning = false;
+  container.onmousemove = (e) => {
+    if (!isPanning) return;
+    panX = e.clientX - startX;
+    panY = e.clientY - startY;
+    wrapper.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
+  };
+
+  container.ontouchstart = (e) => {
+    isPanning = true;
+    startX = e.touches[0].clientX - panX;
+    startY = e.touches[0].clientY - panY;
+  };
+  container.ontouchend = () => isPanning = false;
+  container.ontouchmove = (e) => {
+    if (!isPanning) return;
+    panX = e.touches[0].clientX - startX;
+    panY = e.touches[0].clientY - startY;
+    wrapper.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
+  };
+}
+
+function zoomIn() {
+  scale += 0.1;
+  document.querySelector('.chart-zoom-wrapper').style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
+}
+
+function zoomOut() {
+  scale = Math.max(0.3, scale - 0.1);
+  document.querySelector('.chart-zoom-wrapper').style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
 }
 
 function toggleNode(event, id) {
@@ -335,15 +399,9 @@ function closeModal() {
   <h1>👨‍👩‍👧‍👦 Day Sülalesi Soyağacı</h1>
 </header>
 <div class="container">
-  <div class="explanation">
-    Bu soyağacı <strong>Berat Day</strong> tarafından dinamik olarak oluşturulmuştur.
-    Yapılan herhangi bir girişte düzenleme aynı isim ve tarih seçerek oluşturulabilmektedir.
-    Farklı isimle yanlışlıkla oluşturulan yeni olmayan bir aile bireyi için iletişime geçiniz.
-    İletişim: <strong>05434813373</strong>.
-    <br><br>
-    <a href="javascript:void(0);" onclick="window.open(FORM_LINKI, '_blank');" class="new-entry-link">
-      + Yeni Kişi / Güncelleme Formu
-    </a>
+  <div class="zoom-controls">
+    <button onclick="zoomIn()">➕</button>
+    <button onclick="zoomOut()">➖</button>
   </div>
   <div id="chart_div">Yükleniyor...</div>
 </div>
